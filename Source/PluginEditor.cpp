@@ -109,6 +109,13 @@ void R2RVERBAudioProcessorEditor::configureSlider (juce::Slider& slider, const j
     slider.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 76, 20);
     slider.setName (labelText);
     addAndMakeVisible (slider);
+    auto label = std::make_unique<juce::Label>();
+    label->setText (labelText, juce::dontSendNotification);
+    label->setJustificationType (juce::Justification::centred);
+    label->setFont (juce::Font (juce::FontOptions (10.0f, juce::Font::bold)));
+    label->setColour (juce::Label::textColourId, muted);
+    addAndMakeVisible (*label);
+    labels.push_back (std::move (label));
 }
 
 void R2RVERBAudioProcessorEditor::paint (juce::Graphics& g)
@@ -145,7 +152,10 @@ void R2RVERBAudioProcessorEditor::resized()
     {
         const int col = i % 4;
         const int row = i / 4;
-        sliders[(size_t) i]->setBounds (left + col * cellW, top + row * cellH, 150, 145);
+        const int x = left + col * cellW;
+        const int y = top + row * cellH;
+        sliders[(size_t) i]->setBounds (x, y + 18, 150, 126);
+        labels[(size_t) i]->setBounds (x, y, 150, 18);
     }
     freeze.setBounds (34, 466, 110, 26);
     bypass.setBounds (160, 466, 110, 26);
