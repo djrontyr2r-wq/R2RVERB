@@ -126,8 +126,10 @@ void R2RVERBAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
     const float lowCutHz = parameters.getRawParameterValue ("lowcut")->load();
     const float highCutHz = parameters.getRawParameterValue ("highcut")->load();
     preDelay.setDelay (preDelayMs * static_cast<float> (spec.sampleRate) / 1000.0f);
-    auto hp = juce::dsp::IIR::Coefficients<float>::makeHighPass (spec.sampleRate, lowCutHz);
-    auto lp = juce::dsp::IIR::Coefficients<float>::makeLowPass (spec.sampleRate, highCutHz);
+    const auto safeLowCut = juce::jlimit (20.0f, static_cast<float> (spec.sampleRate * 0.45), lowCutHz);
+    const auto safeHighCut = juce::jlimit (2000.0f, static_cast<float> (spec.sampleRate * 0.45), highCutHz);
+    auto hp = juce::dsp::IIR::Coefficients<float>::makeHighPass (spec.sampleRate, safeLowCut);
+    auto lp = juce::dsp::IIR::Coefficients<float>::makeLowPass (spec.sampleRate, safeHighCut);
     for (int ch = 0; ch < channels; ++ch)
     {
         lowCutFilters[(size_t) ch].coefficients = hp;
