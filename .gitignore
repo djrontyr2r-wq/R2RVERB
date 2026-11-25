@@ -1,0 +1,18 @@
+# Visual Studio / CMake
+.vs/
+out/
+build/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+*.sln
+*.vcxproj*
+*.user
+*.pdb
+*.ilk
+*.obj
+*.pch
+*.lib
+*.exp
+*.dll
+*.vst3/
