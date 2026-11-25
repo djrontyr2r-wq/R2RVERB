@@ -28,6 +28,9 @@ juce_add_plugin(R2RVERB
     COPY_PLUGIN_AFTER_BUILD FALSE
 )
 
+# Generate JuceHeader.h required by the plugin source files.
+juce_generate_juce_header(R2RVERB)
+
 target_sources(R2RVERB PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginEditor.cpp
