@@ -6,7 +6,6 @@ class R2RVERBAudioProcessor final : public juce::AudioProcessor
 {
 public:
     using APVTS = juce::AudioProcessorValueTreeState;
-
     R2RVERBAudioProcessor();
     ~R2RVERBAudioProcessor() override = default;
 
@@ -39,7 +38,6 @@ private:
     juce::dsp::Reverb reverb;
     juce::dsp::ProcessSpec processSpec {};
     juce::AudioBuffer<float> wetBuffer;
-
     void updateReverbParameters();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (R2RVERBAudioProcessor)
