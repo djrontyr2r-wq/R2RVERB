@@ -49,8 +49,8 @@ R2RVERBAudioProcessor::APVTS::ParameterLayout R2RVERBAudioProcessor::createParam
 void R2RVERBAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     spec.sampleRate = sampleRate;
-    spec.maximumBlockSize = static_cast<juce::uint> (samplesPerBlock);
-    spec.numChannels = static_cast<juce::uint> (getTotalNumOutputChannels());
+    spec.maximumBlockSize = static_cast<juce::uint32> (samplesPerBlock);
+    spec.numChannels = static_cast<juce::uint32> (getTotalNumOutputChannels());
 
     reverb.reset();
     reverb.prepare (spec);
@@ -98,7 +98,6 @@ void R2RVERBAudioProcessor::updateReverbParameters()
     const auto width = parameters.getRawParameterValue ("width")->load();
     const auto freeze = parameters.getRawParameterValue ("freeze")->load() > 0.5f;
 
-    // Three tuned voicings using JUCE's stereo reverb network.
     const float modeSize  = mode == 0 ? 0.88f : (mode == 1 ? 0.38f : 0.62f);
     const float modeDamp  = mode == 0 ? 0.30f : (mode == 1 ? 0.62f : 0.22f);
     const float modeWidth = mode == 1 ? 0.72f : 1.0f;
@@ -113,8 +112,6 @@ void R2RVERBAudioProcessor::updateReverbParameters()
     p.width = juce::jlimit (0.0f, 1.0f, width * modeWidth);
     p.freezeMode = freeze ? 1.0f : 0.0f;
     reverb.setParameters (p);
-
-    // Decay and size jointly shape the reverb network's decay character.
 }
 
 void R2RVERBAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
