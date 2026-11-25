@@ -36,6 +36,9 @@ private:
     juce::dsp::Reverb reverb;
     juce::dsp::ProcessSpec spec {};
     juce::AudioBuffer<float> wetBuffer;
+    juce::dsp::DelayLine<float, juce::dsp::DelayLineInterpolationTypes::Linear> preDelay { 96000 };
+    std::array<juce::dsp::IIR::Filter<float>, 2> lowCutFilters;
+    std::array<juce::dsp::IIR::Filter<float>, 2> highCutFilters;
     float smoothedWet = 0.25f;
     float smoothedDry = 0.75f;
 
