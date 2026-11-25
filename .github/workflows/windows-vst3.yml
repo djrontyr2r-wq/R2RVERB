@@ -1,4 +1,4 @@
-name: Build R2RVERB VST3 (Windows x64)
+name: Build R2RVERB 2.0 VST3 (Windows x64)
 
 on:
   workflow_dispatch:
@@ -14,18 +14,27 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
-      - name: Checkout
+      - name: Checkout source
         uses: actions/checkout@v4
 
-      - name: Configure x64
-        run: cmake -S . -B build -A x64
+      - name: Configure clean x64 build
+        run: cmake -S . -B build -A x64 -DCMAKE_BUILD_TYPE=Release
 
-      - name: Build VST3
-        run: cmake --build build --config Release --target R2RVERB_VST3
+      - name: Build fresh VST3
+        run: cmake --build build --config Release --target R2RVERB_VST3 --clean-first --parallel
 
-      - name: Upload VST3
+      - name: Verify VST3 bundle exists
+        shell: pwsh
+        run: |
+          $plugin = "build/R2RVERB_artefacts/Release/VST3/R2RVERB.vst3"
+          if (!(Test-Path "$plugin/Contents/x86_64-win/R2RVERB.vst3")) {
+            throw "The x64 VST3 binary was not produced."
+          }
+          Get-Item "$plugin/Contents/x86_64-win/R2RVERB.vst3" | Format-List FullName, Length
+
+      - name: Upload fresh VST3 bundle
         uses: actions/upload-artifact@v4
         with:
-          name: R2RVERB-Windows-x64-VST3
-          path: build/R2RVERB_artefacts/Release/VST3/
+          name: R2RVERB-2.0-Windows-x64-VST3
+          path: build/R2RVERB_artefacts/Release/VST3/R2RVERB.vst3/
           if-no-files-found: error

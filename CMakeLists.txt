@@ -1,8 +1,14 @@
 cmake_minimum_required(VERSION 3.22)
-project(R2RVERB VERSION 1.0.0 LANGUAGES CXX)
+project(R2RVERB VERSION 2.0.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Prefer the static MSVC runtime for a more self-contained Windows VST3.
+if (MSVC)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
 
 include(FetchContent)
 FetchContent_Declare(JUCE
@@ -14,11 +20,11 @@ FetchContent_MakeAvailable(JUCE)
 
 juce_add_plugin(R2RVERB
     COMPANY_NAME "DJ R2R Music"
-    BUNDLE_ID "com.djr2rmusic.r2rverb"
+    BUNDLE_ID "com.djr2rmusic.r2rverb.v2"
     PLUGIN_MANUFACTURER_CODE DjR2
-    PLUGIN_CODE R2Rv
+    PLUGIN_CODE Rv02
     PRODUCT_NAME "R2RVERB"
-    DESCRIPTION "DJ R2R Music Advanced Hall / Room / Plate Reverb"
+    DESCRIPTION "DJ R2R Music Studio Reverb 2.0"
     FORMATS VST3
     VST3_CATEGORIES Fx Reverb
     IS_SYNTH FALSE
@@ -28,7 +34,6 @@ juce_add_plugin(R2RVERB
     COPY_PLUGIN_AFTER_BUILD FALSE
 )
 
-# Generate JuceHeader.h required by the plugin source files.
 juce_generate_juce_header(R2RVERB)
 
 target_sources(R2RVERB PRIVATE
@@ -47,6 +52,5 @@ target_link_libraries(R2RVERB PRIVATE
     juce::juce_dsp
     PUBLIC
     juce::juce_recommended_config_flags
-    juce::juce_recommended_lto_flags
     juce::juce_recommended_warning_flags
 )
