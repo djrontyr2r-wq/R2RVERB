@@ -54,6 +54,10 @@ void R2RVERBAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBloc
     reverb.reset();
     reverb.setSampleRate (sampleRate);
     wetBuffer.setSize (static_cast<int> (spec.numChannels), samplesPerBlock);
+    preDelay.prepare (spec);
+    preDelay.reset();
+    for (auto& filter : lowCutFilters) filter.prepare (spec);
+    for (auto& filter : highCutFilters) filter.prepare (spec);
     updateReverbParameters();
     smoothedWet = parameters.getRawParameterValue ("mix")->load();
     smoothedDry = 1.0f - smoothedWet;
@@ -62,6 +66,9 @@ void R2RVERBAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBloc
 void R2RVERBAudioProcessor::releaseResources()
 {
     reverb.reset();
+    preDelay.reset();
+    for (auto& filter : lowCutFilters) filter.reset();
+    for (auto& filter : highCutFilters) filter.reset();
     wetBuffer.setSize (0, 0);
 }
 
@@ -88,7 +95,9 @@ void R2RVERBAudioProcessor::updateReverbParameters()
     const float modeWidth = mode == 1 ? 0.72f : 1.0f;
 
     juce::dsp::Reverb::Parameters p;
-    p.roomSize = juce::jlimit (0.0f, 1.0f, 0.35f * modeSize + 0.65f * size);
+    const float decayAmount = juce::jlimit (0.0f, 1.0f, decay / 12.0f);
+    p.roomSize = juce::jlimit (0.0f, 1.0f,
+        0.12f + 0.58f * size + 0.30f * decayAmount * modeSize);
     p.damping = juce::jlimit (0.0f, 1.0f, 0.5f * modeDamp + 0.5f * damping);
     p.wetLevel = 1.0f;
     p.dryLevel = 0.0f;
@@ -96,8 +105,7 @@ void R2RVERBAudioProcessor::updateReverbParameters()
     p.freezeMode = freeze ? 1.0f : 0.0f;
     reverb.setParameters (p);
 
-    // Decay is mapped into the room-size control range for musical control.
-    juce::ignoreUnused (decay);
+    // Decay and size jointly shape the reverb network's decay character.
 }
 
 void R2RVERBAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
@@ -115,13 +123,29 @@ void R2RVERBAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
     const float targetWet = parameters.getRawParameterValue ("mix")->load();
     const float targetDry = 1.0f - targetWet;
     const float preDelayMs = parameters.getRawParameterValue ("predelay")->load();
-    juce::ignoreUnused (preDelayMs,
-                        parameters.getRawParameterValue ("lowcut")->load(),
-                        parameters.getRawParameterValue ("highcut")->load());
+    const float lowCutHz = parameters.getRawParameterValue ("lowcut")->load();
+    const float highCutHz = parameters.getRawParameterValue ("highcut")->load();
+    preDelay.setDelay (preDelayMs * static_cast<float> (spec.sampleRate) / 1000.0f);
+    auto hp = juce::dsp::IIR::Coefficients<float>::makeHighPass (spec.sampleRate, lowCutHz);
+    auto lp = juce::dsp::IIR::Coefficients<float>::makeLowPass (spec.sampleRate, highCutHz);
+    for (int ch = 0; ch < channels; ++ch)
+    {
+        lowCutFilters[(size_t) ch].coefficients = hp;
+        highCutFilters[(size_t) ch].coefficients = lp;
+    }
 
     wetBuffer.setSize (channels, samples, false, false, true);
     for (int ch = 0; ch < channels; ++ch)
-        wetBuffer.copyFrom (ch, 0, buffer, ch, 0, samples);
+    {
+        for (int i = 0; i < samples; ++i)
+        {
+            preDelay.pushSample (ch, buffer.getSample (ch, i));
+            auto sample = preDelay.popSample (ch);
+            sample = lowCutFilters[(size_t) ch].processSample (sample);
+            sample = highCutFilters[(size_t) ch].processSample (sample);
+            wetBuffer.setSample (ch, i, sample);
+        }
+    }
 
     if (channels == 2)
         reverb.processStereo (wetBuffer.getWritePointer (0), wetBuffer.getWritePointer (1), samples);
