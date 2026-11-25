@@ -1,0 +1,30 @@
+name: Build R2RVERB VST3 (Windows x64)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - 'CMakeLists.txt'
+      - 'Source/**'
+      - '.github/workflows/**'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure x64
+        run: cmake -S . -B build -A x64
+
+      - name: Build VST3
+        run: cmake --build build --config Release --target R2RVERB_VST3
+
+      - name: Upload VST3
+        uses: actions/upload-artifact@v4
+        with:
+          name: R2RVERB-Windows-x64-VST3
+          path: build/R2RVERB_artefacts/Release/VST3/
+          if-no-files-found: error
