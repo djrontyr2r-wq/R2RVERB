@@ -49,16 +49,25 @@ R2RVERBAudioProcessor::APVTS::ParameterLayout R2RVERBAudioProcessor::createParam
 void R2RVERBAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     spec.sampleRate = sampleRate;
-    spec.maximumBlockSize = static_cast<juce::uint32> (samplesPerBlock);
-    spec.numChannels = static_cast<juce::uint32> (getTotalNumOutputChannels());
+    spec.maximumBlockSize = static_cast<juce::uint> (samplesPerBlock);
+    spec.numChannels = static_cast<juce::uint> (getTotalNumOutputChannels());
+
     reverb.reset();
-    reverb.setSampleRate (sampleRate);
+    reverb.prepare (spec);
+
     wetBuffer.setSize (static_cast<int> (spec.numChannels), samplesPerBlock);
+
     preDelay.prepare (spec);
     preDelay.reset();
-    for (auto& filter : lowCutFilters) filter.prepare (spec);
-    for (auto& filter : highCutFilters) filter.prepare (spec);
+
+    for (auto& filter : lowCutFilters)
+        filter.prepare (spec);
+
+    for (auto& filter : highCutFilters)
+        filter.prepare (spec);
+
     updateReverbParameters();
+
     smoothedWet = parameters.getRawParameterValue ("mix")->load();
     smoothedDry = 1.0f - smoothedWet;
 }
@@ -149,10 +158,9 @@ void R2RVERBAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
         }
     }
 
-    if (channels == 2)
-        reverb.processStereo (wetBuffer.getWritePointer (0), wetBuffer.getWritePointer (1), samples);
-    else if (channels == 1)
-        reverb.processMono (wetBuffer.getWritePointer (0), samples);
+    juce::dsp::AudioBlock<float> reverbBlock (wetBuffer);
+    juce::dsp::ProcessContextReplacing<float> reverbContext (reverbBlock);
+    reverb.process (reverbContext);
 
     for (int i = 0; i < samples; ++i)
     {
