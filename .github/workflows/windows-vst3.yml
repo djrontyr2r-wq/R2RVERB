@@ -6,6 +6,7 @@ on:
     branches: [ main ]
     paths:
       - 'CMakeLists.txt'
+      - 'README.md'
       - 'Source/**'
       - '.github/workflows/**'
 
