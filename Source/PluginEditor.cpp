@@ -13,10 +13,10 @@ GoldLookAndFeel::GoldLookAndFeel()
 {
     setColour (juce::Slider::thumbColourId, paleGold);
     setColour (juce::Slider::rotarySliderFillColourId, gold);
-    setColour (juce::Slider::rotarySliderOutlineColourId, 0xff39352b);
+    setColour (juce::Slider::rotarySliderOutlineColourId, juce::Colour (0xff39352b));
     setColour (juce::Slider::textBoxTextColourId, paleGold);
     setColour (juce::Slider::textBoxBackgroundColourId, panel);
-    setColour (juce::Slider::textBoxOutlineColourId, 0xff51452d);
+    setColour (juce::Slider::textBoxOutlineColourId, juce::Colour (0xff51452d));
     setColour (juce::ComboBox::backgroundColourId, panel);
     setColour (juce::ComboBox::textColourId, paleGold);
     setColour (juce::ComboBox::outlineColourId, gold);
